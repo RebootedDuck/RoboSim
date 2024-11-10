@@ -1,65 +1,48 @@
 import pygame
 import random
+import time
+
+import ActorClass
+from ColoursClass import Colours as cc
+from MiscClass import Misc as ms
 
 pygame.init()
-screen = pygame.display.set_mode((1024,1024))
+window = pygame.display.set_mode((1920,1080))
 clock = pygame.time.Clock()
-pygame.display.set_caption('RoboSimulation')
+pygame.display.set_caption("RoboSimulation")
 running = True
-sheep_amount = 5
+sheepamount = 1
 
-# Colours
-robocolour = (3, 252, 119)
-bgcolour = (40, 40, 40)
+# CRITICAL
+am = ActorClass.ActorManager(window) # This manages everything, DO NOT ACCESS ACTORS DIRECTLY >:((((, also give it a window so it knows how to make actors
 
-def random_positions(amount: int):
-    randpositions = []
-    for i in range(0, amount):
-        randposx = random.randint(0, 1024)
-        randposy = random.randint(0, 1024)
-        randpositions.append((randposx,randposy))
-    return randpositions
+robot = am.addactor(pos=[100,100], size=[100,100], colour=cc.robotColour, actortype="Robot")
+roboposset = False
 
-randsheepositions = random_positions(sheep_amount)
-       
-def drawsheep(randsheepositions): # I know this is horrible
-    randpositions = randsheepositions
-    sheep = []
-    for i in randpositions:
-        sheep.append(Robot(robotid=random.randint(0,255), window=screen, posx=i[0], posy=i[1], colour=robocolour))
-    for x in sheep:
-        x.draw()
-        
-
-class Robot:
-    def __init__(self, robotid: int, window, posx, posy, colour):
-        self.robotid = robotid
-        self.posx = posx
-        self.posy = posy
-        self.window = window
-        self.colour = colour
-        print(f"New robot with ID {self.robotid}")
-    def get_info(self):
-        print(self.robotid)
-    def draw(self):
-        pygame.draw.rect(self.window, self.colour, [self.posx-50, self.posy-50, 100,100], 2)
-    def setpos(self, posx, posy):
-        self.posx = posx
-        self.posy = posy
-    def changepos(self, posx, posy):
-        self.posx = self.posx + posx
-        self.posy = self.posy + posy
-
-robot = Robot(robotid=random.randrange(0, 255), window=screen, posx=0, posy=0, colour=robocolour)
-print(robot.get_info)
+sheepositions = ms.randompositions(sheepamount, [1920,1080])
+sheep = [am.addactor(pos=[i[0], i[1]], size=[100,100], colour=cc.sheepColour, actortype="Sheep") for i in sheepositions]
 
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    drawsheep(randsheepositions)
-    screen.fill(bgcolour)
-    robot.setpos(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            roboposset = True
+    
+    window.fill(cc.backgroundColour)
+    
+    if not roboposset:
+        robot.setpos([pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]])
+    else:
+        pass
+    
     robot.draw()
+    
+    for i in sheep:
+        i.setpos(sheepositions[sheep.index(i)])
+        i.draw()
+    
+    ms.fpscounter(window, clock, cc.font)
+    
     pygame.display.flip()
-    clock.tick(120)
+    clock.tick(60)
